@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vocero IA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── TOKENS ── */
+    [data-theme="light"] {
+      --bg:        #f8f7f5;
+      --surface:   #ffffff;
+      --surface2:  #f2f1ee;
+      --border:    #e8e7e4;
+      --text:      #1a1a18;
+      --muted:     #9b9894;
+      --gold:      #b8913e;
+      --silver:    #7d8692;
+      --bronze:    #8a5c2e;
+      --bar-bg:    #ebebea;
+      --up:        #2f7d35;
+      --dn:        #b83636;
+    }
+    [data-theme="dark"] {
+      --bg:        #141413;
+      --surface:   #1e1e1c;
+      --surface2:  #252523;
+      --border:    #2e2e2b;
+      --text:      #e8e6e1;
+      --muted:     #686663;
+      --gold:      #c9a44a;
+      --silver:    #8d959f;
+      --bronze:    #a06c38;
+      --bar-bg:    #2a2a28;
+      --up:        #4caf52;
+      --dn:        #e05252;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 50px;
+      display: flex; align-items: stretch;
+      padding: 0 28px;
+      transition: background .25s, border-color .25s;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 800;
+      padding-right: 24px;
+      border-right: 1px solid var(--border);
+      margin-right: 4px;
+      flex-shrink: 0;
+      transition: border-color .25s;
+    }
+    .brand-duck { font-size: 18px; line-height: 1; }
+
+    .tabs { display: flex; align-items: stretch; flex: 1; }
+    .tab {
+      display: flex; align-items: center;
+      padding: 0 18px; height: 50px;
+      font-size: 13px; font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      user-select: none; white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+    /* theme toggle */
+    .theme-btn {
+      display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      align-self: center;
+      transition: background .15s, color .15s, border-color .25s;
+      flex-shrink: 0;
+    }
+    .theme-btn:hover { background: var(--surface2); color: var(--text); }
+    .theme-btn svg { pointer-events: none; }
+    [data-theme="light"] .icon-moon { display: block; }
+    [data-theme="light"] .icon-sun  { display: none; }
+    [data-theme="dark"]  .icon-moon { display: none; }
+    [data-theme="dark"]  .icon-sun  { display: block; }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 32px 28px 56px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .pg-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .pg-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── RACE TRACK ── */
+    .track {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: background .25s, border-color .25s;
+    }
+    .track-head, .lane {
+      display: grid;
+      grid-template-columns: 30px 36px 180px 1fr 52px;
+      gap: 14px; align-items: center;
+      padding: 11px 20px;
+    }
+    .track-head {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding-top: 9px; padding-bottom: 9px;
+      transition: background .25s, border-color .25s;
+    }
+    .th {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--muted); font-weight: 500;
+    }
+    .lane {
+      border-bottom: 1px solid var(--border);
+      transition: background .12s, border-color .25s;
+    }
+    .lane:last-child { border-bottom: none; }
+    .lane:hover { background: var(--surface2); }
+
+    /* rank */
+    .rk {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 800;
+      color: var(--muted); text-align: center;
+    }
+    .rk.g { color: var(--gold); }
+    .rk.s { color: var(--silver); }
+    .rk.b { color: var(--bronze); }
+
+    /* avatar */
+    .av {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      overflow: hidden; flex-shrink: 0;
+      transition: background .25s, border-color .25s;
+    }
+    .av img { width: 100%; height: 100%; object-fit: cover; }
+    .lane:nth-child(2) .av { border-color: var(--gold); }
+    .lane:nth-child(3) .av { border-color: var(--silver); }
+    .lane:nth-child(4) .av { border-color: var(--bronze); }
+
+    .p-name { font-size: 13px; font-weight: 600; }
+    .p-area { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* progress bar */
+    .bar-wrap {}
+    .bar-track {
+      height: 5px; background: var(--bar-bg);
+      border-radius: 3px; position: relative; overflow: visible;
+      margin-top: 2px;
+      transition: background .25s;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 3px;
+      background: var(--muted); position: relative;
+      transition: width 1.1s cubic-bezier(.34,1.2,.64,1);
+    }
+    .lane:nth-child(2) .bar-fill { background: var(--gold); }
+    .lane:nth-child(3) .bar-fill { background: var(--silver); }
+    .lane:nth-child(4) .bar-fill { background: var(--bronze); }
+    .bar-duck {
+      position: absolute; right: -13px; top: 50%;
+      transform: translateY(-60%);
+      font-size: 17px; line-height: 1;
+    }
+    .bar-info { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+    .pts {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 800;
+      text-align: right; color: var(--muted);
+    }
+    .lane:nth-child(2) .pts { color: var(--gold); }
+    .lane:nth-child(3) .pts { color: var(--silver); }
+    .lane:nth-child(4) .pts { color: var(--bronze); }
+
+    /* ── SCORES ── */
+    .tbl-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      overflow-x: auto;
+      transition: background .25s, border-color .25s;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: .09em; color: var(--muted); font-weight: 500;
+      padding: 9px 18px; text-align: left;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      transition: background .25s, border-color .25s;
+    }
+    tbody td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      transition: border-color .25s;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    .pips { display: flex; gap: 3px; flex-wrap: wrap; }
+    .pip {
+      width: 20px; height: 20px; border-radius: 50%;
+      font-size: 10px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border); color: var(--muted);
+      transition: background .25s, border-color .25s;
+    }
+    .pip.on {
+      background: var(--text); color: var(--bg);
+      border-color: var(--text);
+    }
+    .chg { font-size: 12px; font-weight: 600; }
+    .up { color: var(--up); } .dn { color: var(--dn); } .fl { color: var(--muted); }
+
+    /* ── MISSIONS ── */
+    .mgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: background .25s, border-color .25s;
+    }
+    .mc {
+      background: var(--surface); padding: 18px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: background .12s;
+    }
+    .mc:hover { background: var(--surface2); }
+    .mc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .mc-icon { font-size: 22px; }
+    .mc-pts { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .mc-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+    .mc-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .mc-bar { height: 2px; background: var(--bar-bg); border-radius: 1px; margin-top: 6px; transition: background .25s; }
+    .mc-fill { height: 100%; background: var(--muted); border-radius: 1px; }
+    .mc-stat { font-size: 11px; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .topbar { padding: 0 14px; }
+      .brand  { padding-right: 14px; }
+      .tab    { padding: 0 12px; font-size: 12px; }
+      .content { padding: 20px 14px 40px; }
+      .track-head, .lane { grid-template-columns: 24px 32px 1fr 40px; gap: 8px; padding: 10px 14px; }
+      .th:nth-child(3), .p-area { display: none; }
+      .bar-duck { display: none; }
+      .pts { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-duck">🦆</span>
+    Vocero IA
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-page="carrera">Carrera</div>
+    <div class="tab" data-page="puntajes">Puntajes</div>
+    <div class="tab" data-page="misiones">Misiones</div>
+  </div>
+  <button class="theme-btn" id="theme-toggle" aria-label="Cambiar tema">
+    <!-- moon -->
+    <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <!-- sun -->
+    <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- CARRERA -->
+  <div class="page active" id="page-carrera">
+    <div class="pg-title">La carrera</div>
+    <div class="pg-sub">Progreso hacia convertirse en Vocero IA</div>
+    <div class="track">
+      <div class="track-head">
+        <span class="th">#</span>
+        <span></span>
+        <span class="th">Participante</span>
+        <span class="th">Progreso</span>
+        <span class="th" style="text-align:right">Pts</span>
+      </div>
+      <div id="lanes"></div>
+    </div>
+  </div>
+
+  <!-- PUNTAJES -->
+  <div class="page" id="page-puntajes">
+    <div class="pg-title">Puntajes</div>
+    <div class="pg-sub">Misiones completadas por participante</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nombre</th><th>Área</th>
+          <th>Misiones</th><th>Esta semana</th>
+          <th style="text-align:right">Total</th>
+        </tr></thead>
+        <tbody id="scores"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MISIONES -->
+  <div class="page" id="page-misiones">
+    <div class="pg-title">Misiones</div>
+    <div class="pg-sub">Completa objetivos para avanzar en la carrera</div>
+    <div class="mgrid" id="mgrid"></div>
+  </div>
+
+</div>
+
+<script>
+/* ── DATA ── */
+const OBJ = [
+  {id:1, icon:'🤖', name:'Primera herramienta IA',  desc:'Usa una herramienta de IA en tu trabajo diario.',  pts:50 },
+  {id:2, icon:'📢', name:'Demo en reunión',          desc:'Presenta una demo de IA a tu equipo.',              pts:80 },
+  {id:3, icon:'📝', name:'Caso documentado',         desc:'Documenta un caso real con métricas de impacto.',  pts:100},
+  {id:4, icon:'🎓', name:'Capacitación completada',  desc:'Completa un curso o certificación de IA.',          pts:70 },
+  {id:5, icon:'🔗', name:'Integración de proceso',   desc:'Integra IA en un proceso existente de tu área.',   pts:120},
+  {id:6, icon:'💡', name:'Propuesta de mejora',      desc:'Presenta una propuesta con IA al liderazgo.',      pts:90 },
+  {id:7, icon:'🌐', name:'Difusión externa',         desc:'Comparte aprendizajes en redes o evento externo.', pts:60 },
+];
+
+const PP = [
+  {n:'Carlos Ríos',     a:'Tecnología',    p:410, d:[1,2,3,4,5], c:'+30'},
+  {n:'Laura Méndez',    a:'Finanzas',      p:340, d:[1,2,3,4],   c:'+20'},
+  {n:'Ana Quiroga',     a:'RR.HH.',        p:290, d:[1,2,3],     c:'+10'},
+  {n:'Diego Vargas',    a:'Operaciones',   p:220, d:[1,2,4],     c:'—'  },
+  {n:'Sofía Terán',     a:'Marketing',     p:170, d:[1,2],       c:'+10'},
+  {n:'Marcos Salinas',  a:'Legal',         p:150, d:[1,6],       c:'—'  },
+  {n:'Valeria Cruz',    a:'Logística',     p:130, d:[1,4],       c:'+20'},
+  {n:'Jorge Poma',      a:'Comercial',     p:120, d:[1],         c:'—'  },
+  {n:'Lucía Flores',    a:'Finanzas',      p:80,  d:[1],         c:'-10'},
+  {n:'Raúl Huanca',     a:'TI',            p:70,  d:[7],         c:'+70'},
+  {n:'Patricia Lima',   a:'Calidad',       p:50,  d:[1],         c:'—'  },
+  {n:'Iván Molina',     a:'Administración',p:10,  d:[],          c:'—'  },
+];
+
+const MAX    = OBJ.reduce((s,o) => s + o.pts, 0);
+const sorted = [...PP].sort((a,b) => b.p - a.p);
+const rk  = i => i===0?'g':i===1?'s':i===2?'b':'';
+const ini = n => n.split(' ').map(w=>w[0]).slice(0,2).join('');
+
+/* ── RENDER CARRERA ── */
+document.getElementById('lanes').innerHTML = sorted.map((p,i) => {
+  const pct = Math.round(p.p / MAX * 100);
+  return `<div class="lane">
+    <div class="rk ${rk(i)}">${i+1}</div>
+    <div class="av">${ini(p.n)}</div>
+    <div>
+      <div class="p-name">${p.n}</div>
+      <div class="p-area">${p.a}</div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%">
+          <span class="bar-duck">🦆</span>
+        </div>
+      </div>
+      <div class="bar-info">${p.d.length} de ${OBJ.length} misiones · ${pct}%</div>
+    </div>
+    <div class="pts">${p.p}</div>
+  </div>`;
+}).join('');
+
+/* ── RENDER PUNTAJES ── */
+document.getElementById('scores').innerHTML = sorted.map((p,i) => {
+  const pips = OBJ.map(o =>
+    `<span class="pip${p.d.includes(o.id)?' on':''}" title="${o.name}">${o.icon}</span>`
+  ).join('');
+  const cc = p.c.startsWith('+') ? 'up' : p.c==='—' ? 'fl' : 'dn';
+  return `<tr>
+    <td style="color:var(--muted);font-weight:600">${i+1}</td>
+    <td style="font-weight:600">${p.n}</td>
+    <td style="color:var(--muted)">${p.a}</td>
+    <td><div class="pips">${pips}</div></td>
+    <td><span class="chg ${cc}">${p.c}</span></td>
+    <td style="text-align:right;font-weight:600">${p.p}</td>
+  </tr>`;
+}).join('');
+
+/* ── RENDER MISIONES ── */
+document.getElementById('mgrid').innerHTML = OBJ.map(o => {
+  const cnt = PP.filter(p => p.d.includes(o.id)).length;
+  const pct = Math.round(cnt / PP.length * 100);
+  return `<div class="mc">
+    <div class="mc-top">
+      <span class="mc-icon">${o.icon}</span>
+      <span class="mc-pts">+${o.pts} pts</span>
+    </div>
+    <div class="mc-name">${o.name}</div>
+    <div class="mc-desc">${o.desc}</div>
+    <div class="mc-bar"><div class="mc-fill" style="width:${pct}%"></div></div>
+    <div class="mc-stat">${cnt} de ${PP.length} completaron · ${pct}%</div>
+  </div>`;
+}).join('');
+
+/* ── TABS ── */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-' + t.dataset.page).classList.add('active');
+  });
+});
+
+/* ── THEME TOGGLE ── */
+const root   = document.documentElement;
+const toggle = document.getElementById('theme-toggle');
+
+// Respeta preferencia del sistema al cargar
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  root.setAttribute('data-theme', 'dark');
+}
+
+toggle.addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('via-theme', next);
+});
+
+// Persiste preferencia
+const saved = localStorage.getItem('via-theme');
+if (saved) root.setAttribute('data-theme', saved);
+</script>
+</body>
+</html>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vocero IA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #f9f8f6;
+      --surface: #ffffff;
+      --border:  #ebebea;
+      --text:    #1c1c1a;
+      --muted:   #9b9894;
+      --gold:    #c8a44a;
+      --silver:  #8d959f;
+      --bronze:  #a06c38;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 52px;
+      display: flex;
+      align-items: stretch;
+      padding: 0 2rem;
+      gap: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding-right: 2rem;
+      border-right: 1px solid var(--border);
+      margin-right: 1.5rem;
+      flex-shrink: 0;
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: .95rem;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+    .brand-dot {
+      width: 6px; height: 6px;
+      background: #5cb85c;
+      border-radius: 50%;
+      animation: pulse 1.8s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .nav-tabs-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      flex: 1;
+    }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 1.1rem;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+    .topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-left: auto;
+      padding-left: 1.5rem;
+      border-left: 1px solid var(--border);
+    }
+    .meta-item {
+      font-size: .72rem;
+      color: var(--muted);
+      line-height: 1.3;
+      text-align: right;
+    }
+    .meta-item strong { color: var(--text); font-weight: 600; }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 4rem;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PAGE TITLE ── */
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: .3rem;
+    }
+    .page-desc {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── RACE TRACK ── */
+    .race-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .race-row {
+      display: grid;
+      grid-template-columns: 32px 36px 170px 1fr 56px;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .race-row:last-child { border-bottom: none; }
+    .race-row:hover { background: var(--bg); }
+    .race-row.head {
+      background: var(--bg);
+      padding: .55rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .race-row.head:hover { background: var(--bg); }
+
+    .col-h {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* rank */
+    .rank {
+      font-family: 'Syne', sans-serif;
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-align: center;
+    }
+    .rank.g { color: var(--gold); }
+    .rank.s { color: var(--silver); }
+    .rank.b { color: var(--bronze); }
+
+    /* avatar */
+    .av {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--border);
+      display: block;
+      background: var(--bg);
+    }
+    .race-row:nth-child(2) .av { border-color: var(--gold); }
+    .race-row:nth-child(3) .av { border-color: var(--silver); }
+    .race-row:nth-child(4) .av { border-color: var(--bronze); }
+
+    /* name */
+    .p-name { font-weight: 600; font-size: .85rem; }
+    .p-area { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+
+    /* bar */
+    .bar-outer {
+      height: 6px;
+      background: var(--bg);
+      border-radius: 3px;
+      overflow: visible;
+      position: relative;
+    }
+    .bar-inner {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--text);
+      position: relative;
+      transition: width 1.1s cubic-bezier(.34,1.2,.64,1);
+    }
+    .race-row:nth-child(2) .bar-inner { background: var(--gold); }
+    .race-row:nth-child(3) .bar-inner { background: var(--silver); }
+    .race-row:nth-child(4) .bar-inner { background: var(--bronze); }
+
+    .duck-tip {
+      position: absolute;
+      right: -12px; top: 50%;
+      transform: translateY(-50%);
+      width: 22px; height: 22px;
+      object-fit: contain;
+    }
+
+    .bar-sub {
+      font-size: .68rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* pts */
+    .pts {
+      text-align: right;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+    .race-row:nth-child(2) .pts { color: var(--gold); }
+    .race-row:nth-child(3) .pts { color: var(--silver); }
+    .race-row:nth-child(4) .pts { color: var(--bronze); }
+
+    /* ── SCORES TABLE ── */
+    .scores-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .scores-wrap table { width: 100%; border-collapse: collapse; }
+    .scores-wrap thead th {
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      font-weight: 600;
+      padding: .55rem 1.25rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .scores-wrap tbody td {
+      padding: .85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .scores-wrap tbody tr:last-child td { border-bottom: none; }
+    .scores-wrap tbody tr:hover td { background: var(--bg); }
+
+    .pip-row { display: flex; gap: 3px; flex-wrap: wrap; }
+    .pip {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      font-size: .62rem;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .pip.on { background: var(--text); color: #fff; border-color: var(--text); }
+    .pip.on.g { background: var(--gold);   border-color: var(--gold); }
+    .pip.on.s { background: var(--silver); border-color: var(--silver); }
+    .pip.on.b { background: var(--bronze); border-color: var(--bronze); }
+
+    .chg { font-size: .7rem; font-weight: 600; padding: .15rem .4rem; border-radius: 4px; }
+    .chg.up   { background: #edf7ee; color: #2d7a31; }
+    .chg.dn   { background: #fdecea; color: #c0392b; }
+    .chg.flat { color: var(--muted); }
+
+    /* ── MISSIONS GRID ── */
+    .missions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .mission {
+      background: var(--surface);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      transition: background .12s;
+    }
+    .mission:hover { background: var(--bg); }
+    .m-top { display: flex; align-items: flex-start; justify-content: space-between; }
+    .m-icon {
+      width: 34px; height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .m-pts {
+      font-family: 'Syne', sans-serif;
+      font-size: .85rem;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .m-name { font-weight: 600; font-size: .86rem; line-height: 1.3; }
+    .m-desc { font-size: .76rem; color: var(--muted); line-height: 1.5; }
+    .m-bar { height: 2px; background: var(--border); border-radius: 1px; margin-top: .25rem; }
+    .m-fill { height: 100%; background: var(--text); border-radius: 1px; }
+    .m-stat { font-size: .68rem; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .topbar { padding: 0 1rem; }
+      .topbar-meta { display: none; }
+      .brand { padding-right: 1rem; margin-right: 1rem; }
+      .content { padding: 1.75rem 1rem 3rem; }
+      .race-row { grid-template-columns: 26px 30px 1fr 44px; gap: .6rem; padding: .85rem 1rem; }
+      .p-area { display: none; }
+      .duck-tip { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <span class="brand-name">Vocero IA</span>
+  </div>
+
+  <div class="nav-tabs-bar">
+    <div class="tab active" data-page="carrera">Carrera</div>
+    <div class="tab" data-page="puntajes">Puntajes</div>
+    <div class="tab" data-page="misiones">Misiones</div>
+  </div>
+
+  <div class="topbar-meta">
+    <div class="meta-item">Semana <strong>3</strong> de 8</div>
+    <div class="meta-item">Líder: <strong id="meta-leader">—</strong></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- CARRERA -->
+  <div class="page active" id="page-carrera">
+    <div class="page-title">La carrera</div>
+    <div class="page-desc">Progreso hacia convertirse en Vocero IA</div>
+
+    <div class="race-wrap">
+      <div class="race-row head">
+        <span class="col-h">#</span>
+        <span></span>
+        <span class="col-h">Participante</span>
+        <span class="col-h">Progreso</span>
+        <span class="col-h" style="text-align:right">Pts</span>
+      </div>
+      <div id="race-rows"></div>
+    </div>
+  </div>
+
+  <!-- PUNTAJES -->
+  <div class="page" id="page-puntajes">
+    <div class="page-title">Puntajes</div>
+    <div class="page-desc">Desglose de misiones completadas por participante</div>
+    <div class="scores-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participante</th>
+            <th>Área</th>
+            <th>Misiones</th>
+            <th>Variación</th>
+            <th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="scores-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MISIONES -->
+  <div class="page" id="page-misiones">
+    <div class="page-title">Misiones</div>
+    <div class="page-desc">Objetivos disponibles · 570 pts máximo</div>
+    <div class="missions-grid" id="missions-grid"></div>
+  </div>
+
+</div>
+
+<script>
+const OBJ = [
+  { id:1, icon:'🤖', name:'Primera herramienta IA',  desc:'Usa una herramienta de IA en tu flujo de trabajo diario.',  pts:50  },
+  { id:2, icon:'📢', name:'Demo en reunión',          desc:'Presenta una demo de IA ante tu equipo.',                   pts:80  },
+  { id:3, icon:'📝', name:'Caso de uso documentado', desc:'Documenta un caso real con métricas de impacto.',           pts:100 },
+  { id:4, icon:'🎓', name:'Capacitación completada', desc:'Completa un curso o certificación de IA aprobado.',         pts:70  },
+  { id:5, icon:'🔗', name:'Integración de proceso',  desc:'Integra IA en un proceso existente de tu área.',            pts:120 },
+  { id:6, icon:'💡', name:'Propuesta de mejora',     desc:'Presenta una propuesta con IA al liderazgo.',               pts:90  },
+  { id:7, icon:'🌐', name:'Difusión externa',        desc:'Comparte aprendizajes en redes o un evento externo.',       pts:60  },
+];
+
+const PP = [
+  { id:1,  name:'Carlos Ríos',     area:'Tecnología',    pts:410, done:[1,2,3,4,5], chg:'+30' },
+  { id:2,  name:'Laura Méndez',    area:'Finanzas',      pts:340, done:[1,2,3,4],   chg:'+20' },
+  { id:3,  name:'Ana Quiroga',     area:'RR.HH.',        pts:290, done:[1,2,3],     chg:'+10' },
+  { id:4,  name:'Diego Vargas',    area:'Operaciones',   pts:220, done:[1,2,4],     chg:'—'   },
+  { id:5,  name:'Sofía Terán',     area:'Marketing',     pts:170, done:[1,2],       chg:'+10' },
+  { id:6,  name:'Marcos Salinas',  area:'Legal',         pts:150, done:[1,6],       chg:'—'   },
+  { id:7,  name:'Valeria Cruz',    area:'Logística',     pts:130, done:[1,4],       chg:'+20' },
+  { id:8,  name:'Jorge Poma',      area:'Comercial',     pts:120, done:[1],         chg:'—'   },
+  { id:9,  name:'Lucía Flores',    area:'Finanzas',      pts: 80, done:[1],         chg:'-10' },
+  { id:10, name:'Raúl Huanca',     area:'TI',            pts: 70, done:[7],         chg:'+70' },
+  { id:11, name:'Patricia Lima',   area:'Calidad',       pts: 50, done:[1],         chg:'—'   },
+  { id:12, name:'Iván Molina',     area:'Administración',pts: 10, done:[],          chg:'—'   },
+];
+
+const MAX = OBJ.reduce((s,o) => s+o.pts, 0);
+const sorted = [...PP].sort((a,b) => b.pts - a.pts);
+
+function rankCls(i) { return i===0?'g':i===1?'s':i===2?'b':''; }
+
+function renderRace() {
+  document.getElementById('meta-leader').textContent = sorted[0].name.split(' ')[0];
+  document.getElementById('race-rows').innerHTML = sorted.map((p,i) => {
+    const pct = Math.round(p.pts / MAX * 100);
+    const rc  = rankCls(i);
+    return `<div class="race-row">
+      <div class="rank ${rc}">${i+1}</div>
+      <img src="duck.png" class="av" alt="${p.name[0]}"
+           onerror="this.src='https://placehold.co/34x34/ebebea/9b9894?text=${p.name[0]}'"/>
+      <div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-area">${p.area}</div>
+      </div>
+      <div>
+        <div class="bar-outer">
+          <div class="bar-inner" style="width:${pct}%">
+            <img src="duck.png" class="duck-tip" alt=""
+                 onerror="this.style.display='none'"/>
+          </div>
+        </div>
+        <div class="bar-sub">${pct}% · ${p.done.length}/${OBJ.length} misiones</div>
+      </div>
+      <div class="pts">${p.pts}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderScores() {
+  document.getElementById('scores-body').innerHTML = sorted.map((p,i) => {
+    const rc   = rankCls(i);
+    const pips = OBJ.map(o => {
+      const on = p.done.includes(o.id);
+      return `<span class="pip${on?' on':''}${on&&rc?' '+rc:''}" title="${o.name}">${o.icon}</span>`;
+    }).join('');
+    const cc = p.chg.startsWith('+') ? 'up' : p.chg === '—' ? 'flat' : 'dn';
+    return `<tr>
+      <td style="color:var(--muted);font-weight:600">${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="duck.png" class="av" style="width:28px;height:28px" alt="${p.name[0]}"
+               onerror="this.src='https://placehold.co/28x28/ebebea/9b9894?text=${p.name[0]}'"/>
+          <span style="font-weight:600">${p.name}</span>
+        </div>
+      </td>
+      <td style="color:var(--muted)">${p.area}</td>
+      <td><div class="pip-row">${pips}</div></td>
+      <td><span class="chg ${cc}">${p.chg}</span></td>
+      <td style="text-align:right;font-family:'Syne',sans-serif;font-weight:800">${p.pts}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMissions() {
+  document.getElementById('missions-grid').innerHTML = OBJ.map(o => {
+    const count = PP.filter(p => p.done.includes(o.id)).length;
+    const pct   = Math.round(count / PP.length * 100);
+    return `<div class="mission">
+      <div class="m-top">
+        <div class="m-icon">${o.icon}</div>
+        <div class="m-pts">+${o.pts}</div>
+      </div>
+      <div class="m-name">${o.name}</div>
+      <div class="m-desc">${o.desc}</div>
+      <div class="m-bar"><div class="m-fill" style="width:${pct}%"></div></div>
+      <div class="m-stat">${count} de ${PP.length} completaron · ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-' + t.dataset.page).classList.add('active');
+  });
+});
+
+renderRace();
+renderScores();
+renderMissions();
+</script>
+</body>
+</html>
