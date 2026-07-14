@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vocero IA — La Gran Carrera BCP</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── TOKENS ── */
+    [data-theme="dark"] {
+      --bg:      #0d111c;
+      --surface: #131929;
+      --card:    #1a2235;
+      --border:  #253354;
+      --text:    #e8eaf0;
+      --muted:   #7a8aa8;
+      --accent:  #FF6B00;
+      --accent2: #4d8fff;
+      --bar-bg:  #0d1830;
+      --topbar:  rgba(13,17,28,.96);
+    }
+    [data-theme="light"] {
+      --bg:      #f0f2f7;
+      --surface: #ffffff;
+      --card:    #e8ebf5;
+      --border:  #c8cfe8;
+      --text:    #0d1530;
+      --muted:   #6070a0;
+      --accent:  #FF6B00;
+      --accent2: #003DA5;
+      --bar-bg:  #d0d5ea;
+      --topbar:  rgba(255,255,255,.97);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      transition: background .3s, color .3s;
+    }
+
+    /* stars dark only */
+    [data-theme="dark"] body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image:
+        radial-gradient(1px 1px at 9%  14%, rgba(77,143,255,.25) 0%,transparent 100%),
+        radial-gradient(1px 1px at 29% 57%, rgba(255,107,0,.15)  0%,transparent 100%),
+        radial-gradient(1px 1px at 55% 23%, rgba(77,143,255,.20) 0%,transparent 100%),
+        radial-gradient(1px 1px at 75% 80%, rgba(255,255,255,.10) 0%,transparent 100%),
+        radial-gradient(1px 1px at 88% 39%, rgba(77,143,255,.18) 0%,transparent 100%),
+        radial-gradient(1px 1px at 19% 83%, rgba(255,255,255,.08) 0%,transparent 100%),
+        radial-gradient(1px 1px at 64% 54%, rgba(255,107,0,.12)  0%,transparent 100%);
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      background: var(--topbar);
+      backdrop-filter: blur(12px);
+      border-bottom: 3px solid #003DA5;
+      transition: background .3s;
+    }
+    /* brand always white bg so blue logo is visible */
+    .brand-wrap {
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0;
+      min-height: 54px;
+    }
+    .brand-duck { width: 32px; height: 32px; object-fit: contain; }
+    .brand-name {
+      font-family: 'Bangers', cursive;
+      font-size: 1.1rem; letter-spacing: .05em;
+      color: #FF6B00; line-height: 1;
+    }
+    .brand-sub {
+      font-size: .58rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: #003DA5; line-height: 1;
+      margin-top: 2px;
+    }
+
+    .nav-tab {
+      padding: 0 16px;
+      height: 54px;
+      display: flex; align-items: center;
+      font-size: .82rem; font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -3px;
+      white-space: nowrap;
+      transition: color .15s, border-color .15s;
+      user-select: none;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .theme-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, color .15s;
+    }
+    .theme-btn:hover { background: var(--card); color: var(--text); }
+    [data-theme="dark"]  .i-sun  { display:block; } [data-theme="dark"]  .i-moon { display:none; }
+    [data-theme="light"] .i-sun  { display:none;  } [data-theme="light"] .i-moon { display:block; }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── SURFACE CARD ── */
+    .s-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: background .3s, border-color .3s;
+    }
+    .s-card-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 18px;
+      font-size: .64rem; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted); font-weight: 700;
+      transition: background .3s, border-color .3s;
+    }
+
+    /* ── TYPOGRAPHY ── */
+    .race-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(1.9rem,4.5vw,2.9rem);
+      letter-spacing: .04em; color: var(--accent); line-height: 1;
+    }
+    .race-sub {
+      color: var(--accent2); font-size: .78rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+    }
+    .pg-title {
+      font-family: 'Bangers', cursive;
+      font-size: clamp(1.4rem,4vw,2rem);
+      letter-spacing: .05em; color: var(--accent2);
+    }
+    .sec-label {
+      font-size: .66rem; text-transform: uppercase;
+      letter-spacing: .13em; color: var(--muted); font-weight: 700;
+    }
+    .live-dot {
+      display: inline-block; width: 7px; height: 7px;
+      background: #4ade80; border-radius: 50%;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── PODIUM ── */
+    .podium-slot { display:flex; flex-direction:column; align-items:center; flex:1; max-width:160px; }
+    .pod-av { border-radius:50%; object-fit:contain; border:3px solid transparent; background:var(--card); }
+    .p1 .pod-av { width:84px;height:84px; border-color:#FF6B00; }
+    .p2 .pod-av { width:68px;height:68px; border-color:var(--muted); }
+    .p3 .pod-av { width:68px;height:68px; border-color:#4d8fff; }
+    .pod-block { width:100%; border-radius:8px 8px 0 0; display:flex; align-items:center; justify-content:center; }
+    .p1 .pod-block { height:76px; background:#CC5500; }
+    .p2 .pod-block { height:52px; background:#4a5c7a; }
+    .p3 .pod-block { height:36px; background:#2e4a80; }
+    [data-theme="light"] .p1 .pod-block { background:#e05c00; }
+    [data-theme="light"] .p2 .pod-block { background:#5570a0; }
+    [data-theme="light"] .p3 .pod-block { background:#003DA5; }
+    .pod-num { font-family:'Bangers',cursive; font-size:2rem; color:rgba(255,255,255,.5); }
+
+    /* ── LANES ── */
+    .lane-grid {
+      display: grid;
+      grid-template-columns: 30px 36px 150px 1fr auto 54px;
+      column-gap: 12px; align-items: center;
+      padding: 10px 18px;
+    }
+    .lane-row { border-bottom: 1px solid var(--border); transition: background .12s, border-color .3s; }
+    .lane-row:last-child { border-bottom: none; }
+    .lane-row:hover { background: var(--card); }
+
+    .rk { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Bangers',cursive; font-size:.9rem; }
+    .rk1 { background:#FF6B00; color:#fff; }
+    .rk2 { background:var(--muted); color:#fff; }
+    .rk3 { background:#4d8fff; color:#fff; }
+    .rkn { background:var(--card); color:var(--muted); border:1px solid var(--border); }
+
+    .av { width:34px; height:34px; border-radius:50%; object-fit:contain; border:2px solid var(--border); background:var(--card); display:block; flex-shrink:0; }
+    .lane-row.l1 .av { border-color:#FF6B00; }
+    .lane-row.l2 .av { border-color:var(--muted); }
+    .lane-row.l3 .av { border-color:#4d8fff; }
+
+    /* bar */
+    .bar-road { height:18px; background:var(--bar-bg); border-radius:9px; border:1px solid var(--border); position:relative; overflow:hidden; }
+    .bar-fill  { height:100%; border-radius:9px; background:#4d8fff; position:relative; transition:width 1.1s cubic-bezier(.34,1.2,.64,1); }
+    .lane-row.l1 .bar-fill { background:#FF6B00; }
+    .lane-row.l2 .bar-fill { background:var(--muted); }
+    .lane-row.l3 .bar-fill { background:#4d8fff; }
+    [data-theme="light"] .bar-fill  { background:#003DA5; }
+    [data-theme="light"] .lane-row.l1 .bar-fill { background:#FF6B00; }
+    [data-theme="light"] .lane-row.l2 .bar-fill { background:var(--muted); }
+    [data-theme="light"] .lane-row.l3 .bar-fill { background:#003DA5; }
+    .bar-duck { position:absolute; right:-4px; top:50%; transform:translateY(-50%); width:26px; height:26px; object-fit:contain; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); z-index:2; }
+
+    .lpts { text-align:right; font-family:'Bangers',cursive; font-size:1.1rem; color:var(--muted); }
+    .lane-row.l1 .lpts { color:#FF6B00; }
+    .lane-row.l2 .lpts { color:var(--muted); }
+    .lane-row.l3 .lpts { color:#4d8fff; }
+
+    /* ── LEVEL BADGE ── */
+    .lv-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      border-radius:5px; padding:2px 7px 2px 3px;
+      font-size:.68rem; font-weight:700; white-space:nowrap;
+      border:1px solid transparent; flex-shrink:0;
+    }
+    .lv-badge img { width:14px; height:14px; object-fit:contain; }
+    .lv1 { background:rgba(130,130,130,.12); border-color:#808080; color:#909090; }
+    .lv2 { background:rgba(76,168,76,.12);   border-color:#4ca84c; color:#4ca84c; }
+    .lv3 { background:rgba(77,143,255,.14);  border-color:#4d8fff; color:#4d8fff; }
+    .lv4 { background:rgba(168,85,247,.14);  border-color:#a855f7; color:#a855f7; }
+    .lv5 { background:rgba(255,107,0,.16);   border-color:#FF6B00; color:#FF6B00; }
+    .lv6 { background:rgba(245,197,24,.16);  border-color:#f5c518; color:#a87800; }
+
+    /* ── SEARCH ── */
+    .search-input, .search-select {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:8px; padding:8px 14px;
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:.84rem;
+      outline:none; transition:border-color .15s, background .3s;
+    }
+    .search-input:focus, .search-select:focus { border-color:#003DA5; }
+    .search-input::placeholder { color:var(--muted); }
+    .search-input { flex:1; min-width:180px; }
+    .search-select { cursor:pointer; }
+    .no-results { text-align:center; padding:40px; color:var(--muted); font-size:.84rem; }
+
+    /* ── LEVELS GRID ── */
+    .lc-img { width:60px; height:60px; object-fit:contain; border-radius:10px; background:var(--card); border:1px solid var(--border); padding:6px; flex-shrink:0; }
+    .lc-fill { height:100%; border-radius:2px; }
+
+    /* ── MISSIONS ── */
+    .obj-icon { width:38px; height:38px; border-radius:9px; background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:1.15rem; flex-shrink:0; }
+
+    /* ── TABLES ── */
+    .s-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+    .s-table thead th { font-size:.63rem; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); font-weight:700; padding:9px 16px; text-align:left; background:var(--card); border-bottom:1px solid var(--border); white-space:nowrap; }
+    .s-table tbody td { padding:11px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .s-table tbody tr:last-child td { border-bottom:none; }
+    .s-table tbody tr:hover td { background:var(--card); }
+  </style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar d-flex align-items-stretch">
+  <div class="brand-wrap">
+    <img src="duck.png" class="brand-duck" alt=""
+         onerror="this.outerHTML='<span style=&quot;font-size:24px&quot;>🦆</span>'"/>
+    <div>
+      <div class="brand-name">Vocero IA</div>
+      <div class="brand-sub">BCP Bolivia</div>
+    </div>
+  </div>
+
+  <div class="d-flex align-items-stretch flex-grow-1 px-2">
+    <div class="nav-tab active" data-page="carrera">Carrera</div>
+    <div class="nav-tab" data-page="puntajes">Puntajes</div>
+    <div class="nav-tab" data-page="misiones">Misiones</div>
+    <div class="nav-tab" data-page="niveles">Niveles</div>
+  </div>
+
+  <div class="d-flex align-items-center pe-3">
+    <button class="theme-btn" id="thbtn" aria-label="Tema">
+      <svg class="i-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="i-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="container-lg py-4 py-md-5 position-relative" style="z-index:1; max-width:960px">
+
+  <!-- CARRERA -->
+  <div class="page active" id="page-carrera">
+    <div class="mb-4">
+      <div class="race-title">🏁 La Gran Carrera IA</div>
+      <div class="race-sub mt-1"><span class="live-dot me-1"></span>Competencia interna · BCP Bolivia</div>
+      <span class="badge mt-2 px-3 py-1" style="background:#003DA5;font-family:'Bangers',cursive;font-size:.88rem;letter-spacing:.07em">2025 · Edición 1</span>
+    </div>
+
+    <!-- Podio -->
+    <div class="sec-label mb-2">🥇 Podio</div>
+    <hr style="border-color:var(--border);margin-bottom:1.25rem"/>
+    <div class="s-card mb-4">
+      <div class="d-flex align-items-end justify-content-center gap-3 px-3 pt-4" id="podium"></div>
+    </div>
+
+    <!-- Pista -->
+    <div class="sec-label mb-2">🏎 Pista completa</div>
+    <hr style="border-color:var(--border);margin-bottom:1.25rem"/>
+    <div class="s-card">
+      <div class="s-card-header lane-grid">
+        <span>#</span><span></span><span>Participante</span>
+        <span>Progreso</span><span>Nivel</span>
+        <span class="text-end">Pts</span>
+      </div>
+      <div id="lanes"></div>
+    </div>
+  </div>
+
+  <!-- PUNTAJES -->
+  <div class="page" id="page-puntajes">
+    <div class="pg-title mb-1">Puntajes</div>
+    <p class="mb-3" style="color:var(--muted);font-size:.8rem">Busca por nombre o filtra por área</p>
+
+    <div class="d-flex gap-2 flex-wrap mb-2">
+      <input class="search-input" id="search-name" type="text" placeholder="🔍  Buscar participante…"/>
+      <select class="search-select" id="search-area"><option value="">Todas las áreas</option></select>
+    </div>
+    <p class="mb-3" style="font-size:.74rem;color:var(--muted)" id="result-count"></p>
+
+    <div class="s-card" style="overflow-x:auto">
+      <table class="s-table">
+        <thead><tr>
+          <th>#</th><th>Participante</th><th>Área</th>
+          <th>Nivel</th><th class="text-end">Puntos</th>
+        </tr></thead>
+        <tbody id="scores-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MISIONES -->
+  <div class="page" id="page-misiones">
+    <div class="pg-title mb-1">Misiones</div>
+    <p class="mb-3" style="color:var(--muted);font-size:.8rem">Las misiones repetibles suman puntos cada vez que se completan</p>
+    <div class="row g-1" id="obj-grid"></div>
+  </div>
+
+  <!-- NIVELES -->
+  <div class="page" id="page-niveles">
+    <div class="pg-title mb-1">Niveles</div>
+    <p class="mb-3" style="color:var(--muted);font-size:.8rem">Acumula puntos para subir de nivel y acercarte al título de Vocero IA</p>
+    <div class="row g-1" id="levels-grid"></div>
+  </div>
+
+</div>
+
+<script>
+/* ── DATA ── */
+const LEVELS = [
+  {n:1, name:'Explorador IA',  min:0,    max:149,      img:'nivel1.png', emoji:'🔍', color:'#808080',
+   desc:'Comenzaste a descubrir el mundo de la IA en BCP.'},
+  {n:2, name:'Aprendiz IA',    min:150,  max:299,      img:'nivel2.png', emoji:'📚', color:'#4ca84c',
+   desc:'Aplicas herramientas de IA en tu trabajo diario.'},
+  {n:3, name:'Practicante IA', min:300,  max:499,      img:'nivel3.png', emoji:'⚙️', color:'#4d8fff',
+   desc:'Integras IA y compartes aprendizajes con tu equipo.'},
+  {n:4, name:'Promotor IA',    min:500,  max:749,      img:'nivel4.png', emoji:'📣', color:'#a855f7',
+   desc:'Eres referente en tu área e impulsor activo de IA.'},
+  {n:5, name:'Líder IA',       min:750,  max:999,      img:'nivel5.png', emoji:'🚀', color:'#FF6B00',
+   desc:'Lideras iniciativas de IA con impacto medible.'},
+  {n:6, name:'Vocero IA',      min:1000, max:Infinity, img:'nivel6.png', emoji:'🏆', color:'#f5c518',
+   desc:'¡Máximo nivel! Embajador oficial de IA en BCP Bolivia.'},
+];
+
+const OBJ = [
+  {id:1, icon:'🤖', name:'Primera herramienta IA',  desc:'Usa una herramienta de IA en tu trabajo diario.',        pts:50,  rep:true },
+  {id:2, icon:'📢', name:'Demo en reunión',          desc:'Presenta una demo de IA a tu equipo.',                   pts:80,  rep:true },
+  {id:3, icon:'📝', name:'Caso documentado',         desc:'Documenta un caso real con métricas de impacto.',        pts:100, rep:false},
+  {id:4, icon:'🎓', name:'Capacitación completada',  desc:'Completa un curso o certificación de IA aprobado.',      pts:70,  rep:true },
+  {id:5, icon:'🔗', name:'Integración de proceso',   desc:'Integra IA en un proceso existente de tu área.',         pts:120, rep:false},
+  {id:6, icon:'💡', name:'Propuesta de mejora',      desc:'Presenta una propuesta de mejora con IA al liderazgo.', pts:90,  rep:false},
+  {id:7, icon:'🌐', name:'Difusión externa',         desc:'Comparte aprendizajes en redes o evento externo.',       pts:60,  rep:true },
+];
+
+const PP = [
+  {n:'Carlos Ríos',     a:'Tecnología',    pts:620},
+  {n:'Laura Méndez',    a:'Finanzas',      pts:510},
+  {n:'Ana Quiroga',     a:'RR.HH.',        pts:430},
+  {n:'Diego Vargas',    a:'Operaciones',   pts:380},
+  {n:'Sofía Terán',     a:'Marketing',     pts:290},
+  {n:'Marcos Salinas',  a:'Legal',         pts:250},
+  {n:'Valeria Cruz',    a:'Logística',     pts:210},
+  {n:'Jorge Poma',      a:'Comercial',     pts:190},
+  {n:'Lucía Flores',    a:'Finanzas',      pts:140},
+  {n:'Raúl Huanca',     a:'TI',            pts:120},
+  {n:'Patricia Lima',   a:'Calidad',       pts:80 },
+  {n:'Iván Molina',     a:'Administración',pts:30 },
+];
+
+const MAX_PTS = Math.max(...PP.map(p=>p.pts));
+const sorted  = [...PP].sort((a,b)=>b.pts-a.pts);
+const AREAS   = [...new Set(PP.map(p=>p.a))].sort();
+const ini     = n => n.split(' ').map(w=>w[0]).slice(0,2).join('');
+const rkCls   = i => i===0?'rk1':i===1?'rk2':i===2?'rk3':'rkn';
+const lnCls   = i => i===0?'l1':i===1?'l2':i===2?'l3':'';
+
+function getLevel(pts) {
+  return [...LEVELS].reverse().find(l => pts >= l.min) || LEVELS[0];
+}
+
+function avImg(name, s) {
+  s = s||36;
+  return `<img src="duck.png" class="av" style="width:${s}px;height:${s}px" alt="${name}"
+    onerror="this.outerHTML='<div style=&quot;width:${s}px;height:${s}px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0&quot;>${ini(name)}</div>'"/>`;
+}
+
+function lvBadge(pts) {
+  const lv = getLevel(pts);
+  return `<span class="lv-badge lv${lv.n}">
+    <img src="${lv.img}" alt="" onerror="this.outerHTML='${lv.emoji}'"/>
+    Nv.${lv.n} ${lv.name}
+  </span>`;
+}
+
+/* PODIO */
+;[{i:1,s:'p2'},{i:0,s:'p1'},{i:2,s:'p3'}].forEach(({i,s})=>{
+  const p = sorted[i];
+  document.getElementById('podium').innerHTML += `
+    <div class="podium-slot ${s} text-center">
+      ${avImg(p.n, s==='p1'?84:68)}
+      <div class="fw-bold mt-2" style="font-size:.84rem">${p.n}</div>
+      <div style="font-size:.7rem;color:var(--muted)">${p.a}</div>
+      <div class="my-1" style="font-family:'Bangers',cursive;font-size:1.05rem;color:${s==='p1'?'#FF6B00':s==='p2'?'var(--muted)':'#4d8fff'}">${i===0?'🏆 ':''}${p.pts} pts</div>
+      <div class="mb-2">${lvBadge(p.pts)}</div>
+      <div class="pod-block"><span class="pod-num">${i+1}</span></div>
+    </div>`;
+});
+
+/* PISTA */
+document.getElementById('lanes').innerHTML = sorted.map((p,i)=>{
+  const pct = Math.round(p.pts/MAX_PTS*100);
+  return `<div class="lane-row lane-grid">
+    <div class="rk ${rkCls(i)}">${i+1}</div>
+    ${avImg(p.n,34)}
+    <div>
+      <div class="fw-bold" style="font-size:.84rem">${p.n}</div>
+      <div style="font-size:.7rem;color:var(--muted)">${p.a}</div>
+    </div>
+    <div>
+      <div class="bar-road">
+        <div class="bar-fill" style="width:${pct}%">
+          <img src="duck.png" class="bar-duck" alt=""
+               onerror="this.outerHTML='<span style=&quot;position:absolute;right:-5px;top:50%;transform:translateY(-55%);font-size:15px&quot;>🦆</span>'"/>
+        </div>
+      </div>
+      <div style="font-size:.66rem;color:var(--muted);margin-top:3px">${pct}% del líder</div>
+    </div>
+    ${lvBadge(p.pts)}
+    <div class="lpts">${p.pts}</div>
+  </div>`;
+}).join('');
+
+/* PUNTAJES */
+AREAS.forEach(a=>{ const o=document.createElement('option'); o.value=a; o.textContent=a; document.getElementById('search-area').appendChild(o); });
+
+function renderScores(nq, aq) {
+  const q  = (nq||'').toLowerCase().trim();
+  const ar = aq||'';
+  const fl = sorted.filter(p=>(!q||p.n.toLowerCase().includes(q))&&(!ar||p.a===ar));
+  document.getElementById('result-count').textContent =
+    fl.length===sorted.length ? `${sorted.length} participantes` : `${fl.length} de ${sorted.length}`;
+  const tbody = document.getElementById('scores-body');
+  if (!fl.length) { tbody.innerHTML=`<tr><td colspan="5" class="no-results">Sin resultados</td></tr>`; return; }
+  tbody.innerHTML = fl.map(p=>{
+    const gr = sorted.indexOf(p)+1;
+    const c  = gr===1?'#FF6B00':gr===2?'var(--muted)':gr===3?'#4d8fff':'var(--muted)';
+    return `<tr>
+      <td style="font-weight:700;color:${c}">${gr}</td>
+      <td><div class="d-flex align-items-center gap-2">${avImg(p.n,28)}<div><div class="fw-bold">${p.n}</div></div></div></td>
+      <td style="color:var(--muted)">${p.a}</td>
+      <td>${lvBadge(p.pts)}</td>
+      <td class="text-end" style="font-family:'Bangers',cursive;font-size:1.1rem;color:${c}">${p.pts}</td>
+    </tr>`;
+  }).join('');
+}
+document.getElementById('search-name').addEventListener('input',e=>renderScores(e.target.value,document.getElementById('search-area').value));
+document.getElementById('search-area').addEventListener('change',e=>renderScores(document.getElementById('search-name').value,e.target.value));
+renderScores('','');
+
+/* MISIONES */
+document.getElementById('obj-grid').innerHTML = OBJ.map(o=>`
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="s-card h-100 p-3 d-flex flex-column gap-2" style="border-radius:10px">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="obj-icon">${o.icon}</div>
+        <span class="badge" style="background:var(--card);border:1px solid var(--border);color:var(--accent);font-family:'Bangers',cursive;font-size:.9rem">+${o.pts} pts</span>
+      </div>
+      <div class="fw-bold" style="font-size:.86rem">${o.name}</div>
+      <div style="font-size:.75rem;color:var(--muted);line-height:1.5;flex:1">${o.desc}</div>
+      <div>
+        ${o.rep
+          ? `<span class="badge" style="background:rgba(77,143,255,.12);border:1px solid #4d8fff;color:#4d8fff;font-size:.68rem">🔁 Repetible</span>`
+          : `<span class="badge" style="background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:.68rem">✓ Una sola vez</span>`}
+      </div>
+    </div>
+  </div>`).join('');
+
+/* NIVELES */
+document.getElementById('levels-grid').innerHTML = LEVELS.map(lv=>{
+  const cnt = PP.filter(p=>getLevel(p.pts).n===lv.n).length;
+  const pct = Math.round(cnt/PP.length*100);
+  const range = lv.max===Infinity ? `${lv.min}+ pts` : `${lv.min} – ${lv.max} pts`;
+  return `
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="s-card h-100 p-3 d-flex flex-column gap-2" style="border-radius:10px">
+      <div class="d-flex align-items-center gap-3">
+        <img src="${lv.img}" class="lc-img" alt="Nivel ${lv.n}"
+             onerror="this.outerHTML='<div style=&quot;width:60px;height:60px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0&quot;>${lv.emoji}</div>'"/>
+        <div>
+          <div style="font-family:'Bangers',cursive;font-size:1.4rem;letter-spacing:.03em;color:${lv.color};line-height:1">Nivel ${lv.n}</div>
+          <div class="fw-bold" style="font-size:.88rem">${lv.name}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${range}</div>
+        </div>
+      </div>
+      <div style="font-size:.75rem;color:var(--muted);line-height:1.55;flex:1">${lv.desc}</div>
+      <div>
+        <div style="height:3px;background:var(--border);border-radius:2px">
+          <div class="lc-fill" style="width:${pct}%;background:${lv.color}"></div>
+        </div>
+        <div class="mt-1 fw-bold" style="font-size:.7rem;color:${lv.color}">${cnt} participante${cnt!==1?'s':''} en este nivel</div>
+      </div>
+    </div>
+  </div>`;
+}).join('');
+
+/* TABS */
+document.querySelectorAll('.nav-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-'+t.dataset.page).classList.add('active');
+  });
+});
+
+/* THEME */
+const root=document.documentElement;
+const saved=localStorage.getItem('via-theme');
+if(saved) root.setAttribute('data-theme',saved);
+else if(window.matchMedia('(prefers-color-scheme:light)').matches) root.setAttribute('data-theme','light');
+document.getElementById('thbtn').addEventListener('click',()=>{
+  const next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+  root.setAttribute('data-theme',next); localStorage.setItem('via-theme',next);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
